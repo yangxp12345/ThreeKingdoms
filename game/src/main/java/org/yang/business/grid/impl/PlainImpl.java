@@ -15,7 +15,7 @@ public class PlainImpl extends IGrid {
 
     @Override
     public void enter(RoleModel role) {
-        role.setCurrentAct(role.getCurrentAct() - act);
+        role.setCurrentActive(role.getCurrentActive() - act);
 
     }
 

@@ -7,7 +7,6 @@ import org.yang.business.camp.ICamp;
 import org.yang.business.grade.IRoleType;
 import org.yang.business.grade.impl.GeneralImpl;
 import org.yang.business.instruction.ICommand;
-import org.yang.business.map.MapModel;
 import org.yang.business.role.RoleModel;
 
 import java.util.*;
@@ -23,21 +22,20 @@ public class EncircleImpl extends ICommand {
 
     @Override
     public void run(RoleModel role) {
-        while (role.getCurrentAct() > 0) {//最少行动一次
-            List<RoleModel> enemyRoleList = role.getWeapon().calcEnemyRole( role);//攻击范围内的所有敌方角色
-            List<RoleModel> encircleRoleList = getMasterList(role);//需要被包围的角色列表
-            filterMaster(enemyRoleList, encircleRoleList);//得到攻击范围内不被包围的敌方角色
-            if (enemyRoleList.isEmpty()) {//没有可以攻击的敌方角色,找到需要包围的敌方角色并且移动过去
-                if (encircleRoleList.isEmpty()) return;//不存在需要包围的目标
-                RoleModel encircleRole = getRecentlyEncircleRole(role, encircleRoleList);//选择距离当前角色最近的目标
-                role.getMapModel().moveDistance(role, encircleRole);//向指定目标方向移动一次
-                //如果当前角色距离包围角色只有一个格,30%概率只会移动一次就跳出
-                if (Math.abs(role.getX() - encircleRole.getX()) <= 1 && Math.abs(role.getY() - encircleRole.getY()) <= 1 && DataCalc.isProbabilityTrigger(0.3))
-                    break;
-            } else {//存在可以输出的敌方角色,任意选择一个开始输出
-                RoleModel enemyRole = DataCalc.getRandomUnit(enemyRoleList);
-                role.getWeapon().proxyAct(role, enemyRole);
+
+        List<RoleModel> enemyRoleList = role.getWeapon().calcEnemyRole(role);//攻击范围内的所有敌方角色
+        List<RoleModel> encircleRoleList = getMasterList(role);//需要被包围的角色列表
+        filterMaster(enemyRoleList, encircleRoleList);//得到攻击范围内不被包围的敌方角色
+        if (enemyRoleList.isEmpty()) {//没有可以攻击的敌方角色,找到需要包围的敌方角色并且移动过去
+            if (encircleRoleList.isEmpty()) {//不存在需要包围的目标
+                role.setCurrentActive(0);
+                return;
             }
+            RoleModel encircleRole = getRecentlyEncircleRole(role, encircleRoleList);//选择距离当前角色最近的目标
+            role.getMapModel().moveDistance(role, encircleRole);//向指定目标方向移动一次
+        } else {//存在可以输出的敌方角色,任意选择一个开始输出
+            RoleModel enemyRole = DataCalc.getRandomUnit(enemyRoleList);
+            role.getWeapon().proxyAct(role, enemyRole);
         }
     }
 

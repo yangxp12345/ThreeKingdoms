@@ -2,7 +2,6 @@ package org.yang.business.instruction.impl;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.yang.business.calc.DataCalc;
 import org.yang.business.instruction.ICommand;
 import org.yang.business.map.MapModel;
 import org.yang.business.role.RoleModel;
@@ -19,21 +18,22 @@ public class EscapeImpl extends ICommand {
     @Override
     public void run(RoleModel role) {
         RoleModel retreatRole = getRetreatRole(role);//获取营地位置
-        while (role.getCurrentAct() > 0) {//最少行动一次
-            if (retreatRole == null) {
-                log.info("阵容:{}, 级别:{}, 编号:{}, 坐标:({},{}) 指令:{} 不存在营地 无法撤退", role.getCamp().getName(),role.getRoleType().getName(), role.getId(), role.getX(), role.getY(), name);
-                break;
-            }
-            boolean status = isRetreat(role, retreatRole);//是否可以撤退
-            if (status) {//当前位置无法成功撤退 需要向营地移动
-                activeActConsume(role);//目标撤退行动消耗
-                role.getMapModel().moveDistance(role, retreatRole);//向指定目标方向移动一次
-            } else {//可以成功撤退
-                log.info("阵容:{}, 级别:{}, 编号:{}, 坐标:({},{}) 指令:{} 撤退成功", role.getCamp().getName(), role.getRoleType().getName(), role.getId(), role.getX(), role.getY(), name);
-                role.getMapModel().retreatRole(role);//处理撤退的角色
-                break;
-            }
+        if (retreatRole == null) {
+            log.info("阵容:{}, 级别:{}, 编号:{}, 坐标:({},{}) 指令:{} 不存在营地 无法撤退", role.getCamp().getName(), role.getRoleType().getName(), role.getId(), role.getX(), role.getY(), name);
+            role.setCurrentActive(0);
+            return;
         }
+        boolean status = isRetreat(role, retreatRole);//是否可以撤退
+        if (status) {//当前位置无法成功撤退 需要向营地移动
+            activeActConsume(role);//目标撤退行动消耗
+            role.getMapModel().moveDistance(role, retreatRole);//向指定目标方向移动一次
+        } else {//可以成功撤退
+            log.info("阵容:{}, 级别:{}, 编号:{}, 坐标:({},{}) 指令:{} 撤退成功", role.getCamp().getName(), role.getRoleType().getName(), role.getId(), role.getX(), role.getY(), name);
+            role.getMapModel().retreatRole(role);//处理撤退的角色
+            role.setCurrentActive(0);
+            return;
+        }
+
     }
 
     /**
@@ -53,7 +53,7 @@ public class EscapeImpl extends ICommand {
         sumAct += activeActConsumeUnit(role, x - 1, y + 1);
         sumAct += activeActConsumeUnit(role, x, y + 1);
         sumAct += activeActConsumeUnit(role, x + 1, y + 1);
-        role.setCurrentAct(role.getCurrentAct() - sumAct);//todo 行动减值需要优化
+        role.setCurrentActive(role.getCurrentActive() - sumAct);//todo 行动减值需要优化
     }
 
     /**

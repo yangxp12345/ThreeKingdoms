@@ -78,7 +78,6 @@ public class MyTest {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        mapModel.showBattleReport();//显示战斗报告
 
         System.out.println("战斗结束 战斗结束 共" + mapModel.getRound() + "回合");
     }

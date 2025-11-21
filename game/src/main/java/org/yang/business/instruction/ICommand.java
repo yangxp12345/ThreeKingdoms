@@ -3,7 +3,6 @@ package org.yang.business.instruction;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.yang.business.map.MapModel;
 import org.yang.business.role.RoleModel;
 import org.yang.springboot.util.ReflectionUtil;
 
@@ -51,8 +50,11 @@ public abstract class ICommand {
      */
     final public void proxyRun(RoleModel role) {
         log.info("阵容:{}, 级别:{}, 编号:{}, 坐标:({},{}) 指令:{}", role.getCamp().getName(), role.getRoleType().getName(), role.getId(), role.getX(), role.getY(), this.getName());
-        this.run(role);
-        role.setCurrentAct(role.getCumulativeAct());//恢复行动力下一次行动
+        while (role.getCurrentActive() > 0) {//最少行动一次
+            this.run(role);
+            role.getGrid().stay(role);//格子状态加成
+        }
+        role.setCurrentActive(role.getCumulativeActive());//恢复行动力下一次行动
     }
 
     /**

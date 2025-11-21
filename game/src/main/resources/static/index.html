@@ -14,6 +14,13 @@
 <script src="js/active.js"></script>
 <body>
 <div>
+    停顿时间: <label>
+    <input type="text" id="sleep" value="100">
+</label>
+    <button onclick="setSleep()">修改</button>
+</div>
+<br>
+<div>
 
     <label for="camp">选择阵营: </label>
     <select id="camp" onchange="openSocket()">

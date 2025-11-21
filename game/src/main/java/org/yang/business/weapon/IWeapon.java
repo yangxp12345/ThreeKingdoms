@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.yang.business.active.impl.*;
 import org.yang.business.calc.DataCalc;
-import org.yang.business.map.MapModel;
 import org.yang.business.role.RoleModel;
 import org.yang.springboot.socket.SocketServer;
 import org.yang.springboot.util.ReflectionUtil;
@@ -22,7 +21,7 @@ import java.util.Set;
 public abstract class IWeapon {
 
     final static private String name = "士兵武器";
-    final private int act = 1;//行动消耗
+    final private int active = 1;//行动消耗
     final static public Map<Class<? extends IWeapon>, IWeapon> classMap = new HashMap<>();
     final static public Map<String, IWeapon> nameMap = new HashMap<>();
 
@@ -56,12 +55,11 @@ public abstract class IWeapon {
      * @param enemyRole 敌方角色
      */
     final public void proxyAct(RoleModel role, RoleModel enemyRole) {
-        if (role.getCurrentAct() < this.getAct()) {//力竭
-            role.setCurrentAct(0);
-            SocketServer.send(role.getCamp().getName(), new ExhaustionImpl(role));
+        if (role.getCurrentActive() < this.getActive()) {
+            role.setCurrentActive(0);
             return;
         }
-        role.setCurrentAct(role.getCurrentAct() - this.getAct());//更新行动力
+        role.setCurrentActive(role.getCurrentActive() - this.getActive());//允许攻击 更新行动力
 
         if (isFrighten(role, enemyRole)) {//被震慑
             SocketServer.send(role.getCamp().getName(), new FrightenImpl(role, enemyRole));

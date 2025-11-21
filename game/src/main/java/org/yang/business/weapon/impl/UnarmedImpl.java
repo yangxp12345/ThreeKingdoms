@@ -2,13 +2,8 @@ package org.yang.business.weapon.impl;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.yang.business.active.impl.HarmImpl;
-import org.yang.business.active.impl.KillImpl;
-import org.yang.business.calc.DataCalc;
-import org.yang.business.map.MapModel;
 import org.yang.business.role.RoleModel;
 import org.yang.business.weapon.IWeapon;
-import org.yang.springboot.socket.SocketServer;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -23,11 +18,11 @@ import java.util.Map;
 @Data
 public class UnarmedImpl extends IWeapon {
     final private String name = "赤手空拳";
-    final private int act = 2;//行动消耗2 输出效率80
+    final private int active = 2;//行动消耗2 输出效率80
 
 
     /**
-     * 获取攻击目标
+     * 获取主要的攻击目标
      *
      * @return 任意攻击范围内的地方角色
      */
@@ -42,7 +37,7 @@ public class UnarmedImpl extends IWeapon {
         coordinateList.add(new AbstractMap.SimpleEntry<>(roleX - 1, roleY));
         coordinateList.add(new AbstractMap.SimpleEntry<>(roleX, roleY + 1));
         for (Map.Entry<Integer, Integer> entry : coordinateList) {
-            if (role.isEnemyRole(entry.getKey(), entry.getValue()))
+            if (role.calcEnemyRole(entry.getKey(), entry.getValue()))
                 enemyRoleList.add(role.getMapModel().getRoleModels()[entry.getKey()][entry.getValue()]);
         }
         return enemyRoleList;

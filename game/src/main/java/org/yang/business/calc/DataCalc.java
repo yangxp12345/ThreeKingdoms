@@ -69,7 +69,7 @@ public class DataCalc {
      * @param list 集合
      * @return 随机元素
      */
-    public static RoleModel getRandomUnit(List<RoleModel> list) {
+    public static <T> T getRandomUnit(List<T> list) {
         return list.get(getRandom(0, list.size() - 1));
     }
 
@@ -155,4 +155,5 @@ public class DataCalc {
         }
         return result;
     }
+
 }

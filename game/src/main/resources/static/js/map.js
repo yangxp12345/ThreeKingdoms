@@ -86,6 +86,12 @@ function start() {
     sendHttp("/run/start", "POST", {});
 }
 
+function setSleep() {
+    let sleep = document.getElementById("sleep").value;
+    sendHttp("/run/sleep", "POST", {sleep: sleep});
+}
+
+
 /**
  * 角色的行动动作
  * @param jsonResp

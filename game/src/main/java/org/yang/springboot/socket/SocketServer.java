@@ -19,6 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Data
 public class SocketServer {
+    public static int sleep = 100;//停顿时间
+
     //保存所有客户端的session对象 用于交换数据 <用户名,传输数据对象>
     private final static ConcurrentHashMap<String, Session> sessionMap = new ConcurrentHashMap<>();
 
@@ -62,7 +64,7 @@ public class SocketServer {
      */
     public static void send(String camp, IActive active) {
         try {
-            DataCalc.sleep(10);
+            DataCalc.sleep(sleep);
             for (Session session : sessionMap.values()) {
                 session.getBasicRemote().sendText(active.toString());
             }

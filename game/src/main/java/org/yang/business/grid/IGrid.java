@@ -76,8 +76,5 @@ public abstract class IGrid {
     }
 
 
-    @Override
-    public String toString() {
-        return "";
-    }
+
 }

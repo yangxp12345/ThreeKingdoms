@@ -8,25 +8,20 @@ import org.yang.business.active.IActive;
 import org.yang.business.role.RoleModel;
 
 /**
- * 移动
+ * 投降
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MoveImpl extends IActive {
-    final private static String name = "移动";
+public class SurrenderImpl extends IActive {
+    final private static String name = "投降";
     private int sourceX;//原X
     private int sourceY;//原Y
 
-    private int targetX;//目标X
-    private int targetY;//目标Y
 
-
-    public MoveImpl(RoleModel sourceRole, int x, int y) {
+    public SurrenderImpl(RoleModel sourceRole) {
         this.sourceX = sourceRole.getX();
         this.sourceY = sourceRole.getY();
-        this.targetX = x;
-        this.targetY = y;
     }
 
     @Override
@@ -35,8 +30,6 @@ public class MoveImpl extends IActive {
         result.put("name", name);
         result.put("sourceX", sourceX);
         result.put("sourceY", sourceY);
-        result.put("targetX", targetX);
-        result.put("targetY", targetY);
         return result.toJSONString();
     }
 }

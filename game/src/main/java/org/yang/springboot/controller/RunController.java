@@ -21,6 +21,7 @@ import org.yang.business.role.RoleModel;
 import org.yang.business.weapon.impl.UnarmedImpl;
 import org.yang.springboot.init.annotation.MyRequestParam;
 import org.yang.springboot.request.RequestParamModel;
+import org.yang.springboot.socket.SocketServer;
 
 import java.util.Map;
 
@@ -32,9 +33,18 @@ import java.util.Map;
 @CrossOrigin
 public class RunController {
 
-    private boolean isInit = false;
+    private boolean isInit = false;//地图是否初始化
+    private boolean start = false;//是否已经启动白兵战
 
     private MapModel mapModel;
+
+    @RequestMapping("/sleep")
+    public Object sleep(@MyRequestParam RequestParamModel paramModel) {
+        String sleep = paramModel.getBody().get("sleep");
+        log.info(sleep);
+        SocketServer.sleep = Integer.parseInt(sleep);
+        return "{}";
+    }
 
     /**
      * 简单测试请求
@@ -83,6 +93,7 @@ public class RunController {
         mapModel.updateCommand(BlackImpl.class, SoldierImpl.class, NearbyImpl.class);
         mapModel.updateCommand(WhiteImpl.class, GeneralImpl.class, NearbyImpl.class);
         isInit = true;
+        start = false;
         return mapModel.toString();
     }
 
@@ -124,26 +135,20 @@ public class RunController {
     @RequestMapping("/start")
     public Object start() throws Exception {//自定义注解
         if (!isInit) return DataCalc.toJson("error", "请先初始化地图");
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    while (true) {
-                        boolean run = mapModel.run();
-                        DataCalc.showMap(mapModel);//todo 测试用
-                        if (run) break;
-                    }
-                    mapModel.showBattleReport();//显示战斗报告
-                    System.out.println("战斗结束 战斗结束 共" + mapModel.getRound() + "回合");
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+        if (start) return DataCalc.toJson("error", "请勿重复开始");
+        start = true;
+        new Thread(() -> {
+            try {
+                while (true) {
+                    boolean run = mapModel.run();
+                    DataCalc.showMap(mapModel);//todo 测试用
+                    if (run) break;
                 }
+                System.out.println("战斗结束 战斗结束 共" + mapModel.getRound() + "回合");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         }).start();
-
         return DataCalc.toJson("code", 200);
     }
-
-
 }
