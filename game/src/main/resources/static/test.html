@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket</title></head>
+<link rel="stylesheet" href="./css/active.css">
+
+<body>
+<div id="blinkingElement"><img src="./img/deputy.png" alt="deputy"></div>
+<button onclick="blinkAndRemove()">开始/停止闪烁</button>
+
+
+</body>
+<style>
+
+</style>
+<script>
+    function blinkAndRemove() {
+        set()
+        setTimeout(function () {
+            clear();
+        }, 100);
+
+        function set() {
+            document.getElementById('blinkingElement').setAttribute("class", "flicker");
+        }
+
+        function clear() {
+            document.getElementById('blinkingElement').setAttribute("class", "");
+        }
+    }
+</script>
+
+
+</html>

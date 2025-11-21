@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket</title></head>
+<script src="js/common/config.js"></script>
+<script src="js/common/http.js"></script>
+<script src="js/common/websocket.js"></script>
+<script src="js/common/util.js"></script>
+<script src="js/instruction.js"></script>
+<link rel="stylesheet" href="./css/table.css">
+<link rel="stylesheet" href="./css/active.css">
+<script src="js/map.js"></script>
+<script src="js/active.js"></script>
+<body>
+<div>
+
+    <label for="camp">选择阵营: </label>
+    <select id="camp" onchange="openSocket()">
+        <option value="白色">白色</option>
+        <option value="黑色">黑色</option>
+        <option value="灰色">灰色</option>
+    </select>
+</div>
+<br>
+
+<div>
+    <input type="button" onclick="start()" value="启动白兵战"/>
+    <div>
+        <span>主将</span>
+        <button onclick="instructionBatch('进攻','主将')">进攻</button>
+        <button onclick="instructionBatch('包围','主将')">包围</button>
+        <button onclick="instructionBatch('待命','主将')">待命</button>
+        <button onclick="instructionBatch('撤退','主将')">撤退</button>
+    </div>
+    <br>
+    <div style="">
+        <span>副将</span>
+        <button onclick="instructionBatch('进攻','副将')">进攻</button>
+        <button onclick="instructionBatch('包围','副将')">包围</button>
+        <button onclick="instructionBatch('待命','副将')">待命</button>
+        <button onclick="instructionBatch('撤退','副将')">撤退</button>
+    </div>
+    <br>
+    <div>
+        <span>小兵</span>
+        <button onclick="instructionBatch('进攻','小兵')">进攻</button>
+        <button onclick="instructionBatch('包围','小兵')">包围</button>
+        <button onclick="instructionBatch('待命','小兵')">待命</button>
+        <button onclick="instructionBatch('撤退','小兵')">撤退</button>
+    </div>
+    <div>
+        <span>角色id</span><span id="roleId">123</span>
+        <button onclick="instruction('进攻')">进攻</button>
+        <button onclick="instruction('包围')">包围</button>
+        <button onclick="instruction('待命')">待命</button>
+        <button onclick="instruction('撤退')">撤退</button>
+    </div>
+</div>
+
+<div id="map">
+</div>
+<div id="text">【响应】</div>
+</body>
+
+<script>
+    map();//加载地图
+    openSocket();//开启socket
+</script>
+
+
+</html>
