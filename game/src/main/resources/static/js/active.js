@@ -52,6 +52,7 @@ function frighten(jsonResp) {
 function exhaustion(jsonResp) {
 }
 
+
 /**
  * 攻击
  * @param jsonResp 控制参数
@@ -65,6 +66,19 @@ function act(jsonResp) {
     document.getElementById("x" + targetX + "_y" + targetY).firstChild;
     const element = document.getElementById("x" + targetX + "_y" + targetY).firstChild;
     blinkAndRemove(element, 100)
+}
+
+/**
+ * 撤退
+ * @param jsonResp 控制参数
+ */
+function retreat(jsonResp) {
+    let sourceX = jsonResp["sourceX"];
+    let sourceY = jsonResp["sourceY"];
+    document.getElementById("x" + sourceX + "_y" + sourceY).firstChild;
+    const element = document.getElementById("x" + sourceX + "_y" + sourceY).firstChild;
+    blinkAndRemove(element, 100)
+    document.getElementById("x" + sourceX + "_y" + sourceY).firstChild.remove();
 }
 
 

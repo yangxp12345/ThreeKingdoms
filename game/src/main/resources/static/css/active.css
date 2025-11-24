@@ -1,3 +1,6 @@
+/**
+ * 攻击闪烁特效
+ */
 .flicker {
     animation: blinker 0.2s linear infinite;
 }

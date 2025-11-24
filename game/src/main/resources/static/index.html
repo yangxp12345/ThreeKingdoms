@@ -12,67 +12,137 @@
 <link rel="stylesheet" href="./css/active.css">
 <script src="js/map.js"></script>
 <script src="js/active.js"></script>
+<script src="./js/common/cookie.js"></script>
 <body>
-<div>
-    停顿时间: <label>
-    <input type="text" id="sleep" value="100">
-</label>
-    <button onclick="setSleep()">修改</button>
-</div>
-<br>
-<div>
 
-    <label for="camp">选择阵营: </label>
-    <select id="camp" onchange="openSocket()">
-        <option value="白色">白色</option>
-        <option value="黑色">黑色</option>
-        <option value="灰色">灰色</option>
-    </select>
-</div>
-<br>
+<div class="container">
+    <div class="item">
+        <table>
+            <tr>
+                <th>
+                    <label for="sleep"></label><input type="text" id="sleep" value="30" style="width: 60px">
+                    <br>
+                    <button onclick="setSleep()">停顿修改</button>
+                </th>
+                <th>
+                    <label for="camp">所属阵营</label>
+                    <br>
+                    <select id="camp" onchange="updateCamp()">
+                        <option value="白色">白色</option>
+                        <option value="黑色">黑色</option>
+                        <option value="灰色">灰色</option>
+                    </select>
+                </th>
+                <th>
+                    <input type="button" onclick="start()" value="启动白兵战"/>
+                </th>
+            </tr>
+            <tr>
+                <th colspan="3"></th>
+            </tr>
+            <tr>
+                <th>阵营 :<span id="campType"></span></th>
+                <th>武器 :<span id="weapon"></span></th>
+                <th>技巧 :<span id="trick"></span></th>
+            </tr>
+            <tr>
+                <th>类型 :<span id="roleType"></span></th>
+                <th>行动 :<span id="active"></span></th>
+                <th>防御 :<span id="defense"></span></th>
+            </tr>
+            <tr>
+                <th>指令 :<span id="command"></span></th>
+                <th>生命 :<span id="health"></span></th>
+                <th>减伤 :<span id="exempt"></span></th>
+            </tr>
+            <tr>
+                <th>地面 :<span id="grid"></span></th>
+                <th>攻击 :<span id="attack"></span></th>
+                <th>命中 :<span id="hit"></span></th>
+            </tr>
+            <tr>
+                <th>坐标 :<span id="coordinate"></span></th>
+                <th>胆魄 :<span id="unity"></span></th>
+                <th>闪避 :<span id="dodge"></span></th>
+            </tr>
+        </table>
+    </div>
+    <div class="item">
+        <table>
+            <tr>
+                <th>角色类型</th>
+                <th colspan="4" style="text-align: center">指令</th>
 
-<div>
-    <input type="button" onclick="start()" value="启动白兵战"/>
-    <div>
-        <span>主将</span>
-        <button onclick="instructionBatch('进攻','主将')">进攻</button>
-        <button onclick="instructionBatch('包围','主将')">包围</button>
-        <button onclick="instructionBatch('待命','主将')">待命</button>
-        <button onclick="instructionBatch('撤退','主将')">撤退</button>
-    </div>
-    <br>
-    <div style="">
-        <span>副将</span>
-        <button onclick="instructionBatch('进攻','副将')">进攻</button>
-        <button onclick="instructionBatch('包围','副将')">包围</button>
-        <button onclick="instructionBatch('待命','副将')">待命</button>
-        <button onclick="instructionBatch('撤退','副将')">撤退</button>
-    </div>
-    <br>
-    <div>
-        <span>小兵</span>
-        <button onclick="instructionBatch('进攻','小兵')">进攻</button>
-        <button onclick="instructionBatch('包围','小兵')">包围</button>
-        <button onclick="instructionBatch('待命','小兵')">待命</button>
-        <button onclick="instructionBatch('撤退','小兵')">撤退</button>
-    </div>
-    <div>
-        <span>角色id</span><span id="roleId">123</span>
-        <button onclick="instruction('进攻')">进攻</button>
-        <button onclick="instruction('包围')">包围</button>
-        <button onclick="instruction('待命')">待命</button>
-        <button onclick="instruction('撤退')">撤退</button>
+            </tr>
+            <tr>
+                <td>主将</td>
+                <td>
+                    <button onclick="instructionBatch('进攻','主将')">进攻</button>
+                </td>
+                <td>
+                    <button onclick="instructionBatch('包围','主将')">包围</button>
+                </td>
+                <td>
+                    <button onclick="instructionBatch('待命','主将')">待命</button>
+                </td>
+                <td>
+                    <button onclick="instructionBatch('撤退','主将')">撤退</button>
+                </td>
+            </tr>
+            <tr>
+                <td>副将</td>
+                <td>
+                    <button onclick="instructionBatch('进攻','副将')">进攻</button>
+                </td>
+                <td>
+                    <button onclick="instructionBatch('包围','副将')">包围</button>
+                </td>
+                <td>
+                    <button onclick="instructionBatch('待命','副将')">待命</button>
+                </td>
+                <td>
+                    <button onclick="instructionBatch('撤退','副将')">撤退</button>
+                </td>
+            </tr>
+            <tr>
+                <td>小兵</td>
+                <td>
+                    <button onclick="instructionBatch('进攻','小兵')">进攻</button>
+                </td>
+                <td>
+                    <button onclick="instructionBatch('包围','小兵')">包围</button>
+                </td>
+                <td>
+                    <button onclick="instructionBatch('待命','小兵')">待命</button>
+                </td>
+                <td>
+                    <button onclick="instructionBatch('撤退','小兵')">撤退</button>
+                </td>
+            </tr>
+            <tr>
+                <td>角色[<span id="roleId"></span>]</td>
+                <td>
+                    <button onclick="instruction('进攻')">进攻</button>
+                </td>
+                <td>
+                    <button onclick="instruction('包围')">包围</button>
+                </td>
+                <td>
+                    <button onclick="instruction('待命')">待命</button>
+                </td>
+                <td>
+                    <button onclick="instruction('撤退')">撤退</button>
+                </td>
+            </tr>
+        </table>
     </div>
 </div>
-
-<div id="map">
-</div>
-<div id="text">【响应】</div>
+<div id="map"></div>
 </body>
-
 <script>
+    initCamp();//加载默认阵营
     map();//加载地图
-    openSocket();//开启socket
+    openSocket();//连接客户端
 </script>
 
 

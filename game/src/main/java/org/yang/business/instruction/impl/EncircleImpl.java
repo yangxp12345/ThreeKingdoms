@@ -93,7 +93,8 @@ public class EncircleImpl extends ICommand {
         for (Map.Entry<ICamp, Map<Class<? extends IRoleType>, List<RoleModel>>> mapEntry : roleModel.getMapModel().campMemRole.entrySet()) {
             if (mapEntry.getKey().equals(roleModel.getCamp())) continue;//相同阵容 跳过数据
             List<RoleModel> roleModels = mapEntry.getValue().get(GeneralImpl.class);
-            allMaster.addAll(roleModels);
+            if(roleModels!=null) allMaster.addAll(roleModels);
+
         }
         return allMaster;
     }

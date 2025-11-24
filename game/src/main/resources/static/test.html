@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>WebSocket</title></head>
 <link rel="stylesheet" href="./css/active.css">
+<script src="./js/common/cookie.js"></script>
 
 <body>
 <div id="blinkingElement"><img src="./img/deputy.png" alt="deputy"></div>
@@ -15,21 +16,5 @@
 
 </style>
 <script>
-    function blinkAndRemove() {
-        set()
-        setTimeout(function () {
-            clear();
-        }, 100);
-
-        function set() {
-            document.getElementById('blinkingElement').setAttribute("class", "flicker");
-        }
-
-        function clear() {
-            document.getElementById('blinkingElement').setAttribute("class", "");
-        }
-    }
 </script>
-
-
 </html>

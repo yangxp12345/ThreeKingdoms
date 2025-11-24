@@ -9,6 +9,7 @@ import org.yang.business.active.impl.MoveImpl;
 import org.yang.business.calc.DataCalc;
 import org.yang.business.calc.IterModel;
 import org.yang.business.camp.ICamp;
+import org.yang.business.constant.RunEnum;
 import org.yang.business.grade.IRoleType;
 import org.yang.business.grid.ExampleGrid;
 import org.yang.business.grid.IGrid;
@@ -34,7 +35,7 @@ public class MapModel {
     public transient final Map<ICamp, Map<Class<? extends IRoleType>, List<RoleModel>>> campRetreatRole;//撤退阵容角色归类
     public transient final Set<ICamp> allCampSet;//所有阵容
 
-
+    private transient RunEnum anEnum;//是否正在运行
     public transient final Map<Integer, RoleModel> roleIdMap;//所有角色idMap
     final private IGrid[][] grids;//格子
     final transient private RoleModel[][] roleModels;//地图上的角色
@@ -45,7 +46,7 @@ public class MapModel {
 
 
     public MapModel() {
-        this(35, 15);//设置默认值
+        this(50, 15);//设置默认值
     }
 
     public MapModel(int x, int y) {
@@ -62,7 +63,9 @@ public class MapModel {
         campRetreatRole = new HashMap<>();//撤退阵容角色归类
         roleIdMap = new HashMap<>();//所有角色idMap
         campLocation = new HashMap<>();//大本营位置
+        anEnum = RunEnum.WAIT;//默认未运行
     }
+
 
     /**
      * 添加大本营
@@ -156,7 +159,10 @@ public class MapModel {
         round++;//增加一回合
         //清空上一次的行动记录
         List<ICamp> campList = new ArrayList<>(this.campMemRole.keySet());//生成一个新的,还在场的阵营
-        if (campList.size() == 1) return true;
+        if (campList.size() == 1) {
+            this.anEnum = RunEnum.SUCCESS;
+            return true;
+        }
         while (!campList.isEmpty()) {
             ICamp iCamp = IterModel.randomPop(campList);//随机获取阵营
             Map<Class<? extends IRoleType>, List<RoleModel>> roleTypeRoleListMap = this.campMemRole.get(iCamp);//
@@ -171,6 +177,7 @@ public class MapModel {
                 }
             }
         }
+        DataCalc.sleep(50);
         return false;
     }
 
@@ -241,7 +248,11 @@ public class MapModel {
             return;
         }
         //不存在最优解
-        if (DataCalc.isProbabilityTrigger(0.9)) role.setCurrentActive(0);//90%的概率正常走
+        if (DataCalc.isProbabilityTrigger(0.9)) {//90%的概率不越走越远
+            role.setCurrentActive(0);
+            return;
+        }
+        log.info("阵容:{}, 级别:{}, 编号:{}, 坐标:({},{}) 指令:{}, {}", role.getCamp().getName(), role.getRoleType().getName(), role.getId(), role.getX(), role.getY(), role.getCommand().getName(), "触发乱走");
         //乱走
         List<Map.Entry<Integer, Integer>> allCoordinate = role.calcAllCoordinate();
         if (allCoordinate.isEmpty()) role.setCurrentActive(0);

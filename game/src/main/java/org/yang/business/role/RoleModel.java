@@ -1,5 +1,6 @@
 package org.yang.business.role;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -256,5 +257,29 @@ public class RoleModel {
             }
         }
         return allMoveCoordinateList;
+    }
+
+    public JSONObject toJSON() {
+        JSONObject result = new JSONObject();
+        result.put("id", id);
+        result.put("command", command);
+        result.put("x", x);
+        result.put("y", y);
+        result.put("camp", camp);
+        result.put("roleType", roleType);
+        result.put("weapon", weapon);
+        result.put("grid", grid);
+        result.put("currentHealth", currentHealth);
+        result.put("cumulativeHealth", cumulativeHealth);
+        result.put("attack", attack);
+        result.put("trick", trick);
+        result.put("defense", defense);
+        result.put("exempt", exempt);
+        result.put("hit", hit);
+        result.put("dodge", dodge);
+        result.put("unity", unity);
+        result.put("currentActive", currentActive);
+        result.put("cumulativeActive", cumulativeActive);
+        return result;
     }
 }

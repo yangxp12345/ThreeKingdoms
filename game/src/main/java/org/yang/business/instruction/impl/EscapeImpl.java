@@ -2,9 +2,11 @@ package org.yang.business.instruction.impl;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.yang.business.active.impl.RetreatImpl;
 import org.yang.business.instruction.ICommand;
 import org.yang.business.map.MapModel;
 import org.yang.business.role.RoleModel;
+import org.yang.springboot.socket.SocketServer;
 
 /**
  * 往后面逃跑
@@ -24,16 +26,15 @@ public class EscapeImpl extends ICommand {
             return;
         }
         boolean status = isRetreat(role, retreatRole);//是否可以撤退
-        if (status) {//当前位置无法成功撤退 需要向营地移动
-            activeActConsume(role);//目标撤退行动消耗
-            role.getMapModel().moveDistance(role, retreatRole);//向指定目标方向移动一次
-        } else {//可以成功撤退
+        if (status) {//可以成功撤退
             log.info("阵容:{}, 级别:{}, 编号:{}, 坐标:({},{}) 指令:{} 撤退成功", role.getCamp().getName(), role.getRoleType().getName(), role.getId(), role.getX(), role.getY(), name);
             role.getMapModel().retreatRole(role);//处理撤退的角色
             role.setCurrentActive(0);
-            return;
+            SocketServer.send(role.getCamp().getName(), new RetreatImpl(role));//撤退行动通知
+        } else {//无法撤退 向营地移动
+            activeActConsume(role);//目标撤退行动消耗
+            role.getMapModel().moveDistance(role, retreatRole);//向指定目标方向移动一次
         }
-
     }
 
     /**
@@ -83,7 +84,7 @@ public class EscapeImpl extends ICommand {
      * @return 是否可以撤退
      */
     private boolean isRetreat(RoleModel role, RoleModel retreatRole) {
-        return Math.abs(retreatRole.getX() - role.getX() + retreatRole.getY() - role.getY()) == 1;//距离一个单位方可撤退
+        return Math.abs(retreatRole.getX() - role.getX()) + Math.abs(Math.abs(retreatRole.getY() - role.getY())) <= 1;
     }
 
     /**

@@ -1,6 +1,7 @@
 package org.yang.business;
 
 import com.alibaba.fastjson.serializer.SerializeConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.yang.business.calc.DataCalc;
 import org.yang.business.camp.ICamp;
 import org.yang.business.camp.impl.BlackImpl;
@@ -15,6 +16,7 @@ import org.yang.business.role.RoleDataModel;
 import org.yang.business.role.RoleModel;
 import org.yang.business.weapon.impl.UnarmedImpl;
 
+@Slf4j
 public class MyTest {
     public static void main(String[] args) throws Exception {
         test();
@@ -29,14 +31,14 @@ public class MyTest {
 
         mapModel.addRoleModel(RoleModel.create(1, WhiteImpl.class, GeneralImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel()), 2, 7);
 
-        mapModel.addRoleModel(RoleModel.create(2, BlackImpl.class, GeneralImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel() ), 48, 11);
-        mapModel.addRoleModel(RoleModel.create(3, BlackImpl.class, DeputyImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel())  , 20, 12);
-        mapModel.addRoleModel(RoleModel.create(4, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel() ), 20, 3);
-        mapModel.addRoleModel(RoleModel.create(5, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel() ), 20, 6);
-        mapModel.addRoleModel(RoleModel.create(6, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel() ), 20, 2);
-        mapModel.addRoleModel(RoleModel.create(7, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel() ), 24, 7);
-        mapModel.addRoleModel(RoleModel.create(8, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel() ), 24, 8);
-        mapModel.addRoleModel(RoleModel.create(9, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel() ), 24, 9);
+        mapModel.addRoleModel(RoleModel.create(2, BlackImpl.class, GeneralImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel()), 48, 11);
+        mapModel.addRoleModel(RoleModel.create(3, BlackImpl.class, DeputyImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel()), 20, 12);
+        mapModel.addRoleModel(RoleModel.create(4, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel()), 20, 3);
+        mapModel.addRoleModel(RoleModel.create(5, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel()), 20, 6);
+        mapModel.addRoleModel(RoleModel.create(6, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel()), 20, 2);
+        mapModel.addRoleModel(RoleModel.create(7, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel()), 24, 7);
+        mapModel.addRoleModel(RoleModel.create(8, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel()), 24, 8);
+        mapModel.addRoleModel(RoleModel.create(9, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel()), 24, 9);
         mapModel.addRoleModel(RoleModel.create(10, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel()), 24, 14);
         mapModel.addRoleModel(RoleModel.create(11, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel()), 24, 1);
         mapModel.addRoleModel(RoleModel.create(12, BlackImpl.class, SoldierImpl.class, UnarmedImpl.class, RoleDataModel.getRoleDataModel()), 30, 6);
@@ -76,6 +78,7 @@ public class MyTest {
                 if (run) break;
             }
         } catch (Exception e) {
+            log.error("系统异常", e);
             throw new RuntimeException(e);
         }
 

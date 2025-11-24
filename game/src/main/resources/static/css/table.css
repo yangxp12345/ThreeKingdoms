@@ -1,0 +1,15 @@
+/**
+ * 角色控制和角色详情布局
+ */
+.item {
+    display: inline-block; /* 或者使用 inline */
+    margin-right: 10px; /* 可选，添加间距 */
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+button{
+    background: aquamarine;
+}

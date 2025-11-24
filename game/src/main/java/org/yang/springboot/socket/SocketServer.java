@@ -8,13 +8,15 @@ import org.yang.business.active.IActive;
 import org.yang.business.calc.DataCalc;
 
 import javax.websocket.*;
-import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 
-@ServerEndpoint("/webSocket/game/{camp}")//前端页面请求的uri地址,其中{camp}是动态参数,通过@PathParam(value = "camp") 获取
+@ServerEndpoint("/webSocket/game")//前端页面请求的uri地址,其中{camp}是动态参数,通过@PathParam(value = "camp") 获取
 @Component
 @Slf4j
 @Data
@@ -22,32 +24,42 @@ public class SocketServer {
     public static int sleep = 100;//停顿时间
 
     //保存所有客户端的session对象 用于交换数据 <用户名,传输数据对象>
-    private final static ConcurrentHashMap<String, Session> sessionMap = new ConcurrentHashMap<>();
+    private final static Map<String, Session> sessionMap = new ConcurrentHashMap<>();
+
 
     //建立连接成功调用
     @OnOpen
-    public void onOpen(Session session, @PathParam(value = "camp") String camp) throws IOException {
-        log.info("{} 加入连接", camp);
-        sessionMap.put(camp, session);
+    public void onOpen(Session session) throws IOException {
+        //请求参数
+        Map<String, String> paramMap = session.getRequestParameterMap().entrySet().stream().map(unit -> new AbstractMap.SimpleEntry<>(unit.getKey(), unit.getValue().get(0))).collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
+        String camp = paramMap.get("camp");
+        String uuid = paramMap.get("uuid");
+        log.info("客户端: {}, 阵容: {} 加入连接", uuid, camp);
+        sessionMap.put(uuid, session);
     }
 
     //关闭连接时调用
     @OnClose
-    public void onClose(@PathParam(value = "camp") String camp) {
-        sessionMap.remove(camp);
-        log.info("{} 断开连接", camp);
+    public void onClose(Session session) {
+        //请求参数
+        Map<String, String> paramMap = session.getRequestParameterMap().entrySet().stream().map(unit -> new AbstractMap.SimpleEntry<>(unit.getKey(), unit.getValue().get(0))).collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
+        String camp = paramMap.get("camp");
+        String uuid = paramMap.get("uuid");
+        sessionMap.remove(uuid);
+        log.info("客户端: {}, 阵容: {} 断开连接", uuid, camp);
+
     }
 
     /**
      * 接收一个客户端信息
      *
-     * @param camp    接收客户端消息的用户id
      * @param message 接收的信息
      * @throws IOException 异常信息
      */
     @OnMessage
-    public void onMessage(@PathParam(value = "camp") String camp, String message) throws IOException {
-        log.info("接收到客户端{}的消息: {}", camp, message);
+    public void onMessage(Session session, String message) throws IOException {
+        Map<String, String> paramMap = session.getRequestParameterMap().entrySet().stream().map(unit -> new AbstractMap.SimpleEntry<>(unit.getKey(), unit.getValue().get(0))).collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
+        log.info("接收到客户端{}的消息: {}", paramMap, message);
     }
 
     //异常调用
@@ -57,7 +69,7 @@ public class SocketServer {
     }
 
     /**
-     * 给指定客户端发送消息
+     * 给所有客户端发送消息
      *
      * @param camp   用户标识
      * @param active 角色的动作
@@ -72,5 +84,4 @@ public class SocketServer {
             log.error("用户：{}，发送消息异常", camp, e);
         }
     }
-
 }

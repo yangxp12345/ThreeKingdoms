@@ -20,7 +20,13 @@ function instructionBatch(instructionName, roleTypeName) {
  * @param instructionName
  */
 function instruction(instructionName) {
+
+
     const roleId = document.getElementById("roleId").innerText;
+    if (roleId === '') {
+        alert("请在地图上点击角色锁定需要控制的人!")
+        return;
+    }
     const data = {
         instructionName: instructionName,
         roleId: roleId
