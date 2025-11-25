@@ -43,6 +43,7 @@ public class MapModel {
     private int Y;
     private transient int round;//回合数
     private Map<ICamp, RoleModel> campLocation;//大本营位置
+    private transient IterData<RoleModel> iterData;
 
 
     public MapModel() {
@@ -116,6 +117,7 @@ public class MapModel {
     public void killRole(RoleModel roleModel) {
         roleModel.getRoleType().killRole(roleModel);//移除阵容中的角色
         this.roleModels[roleModel.getX()][roleModel.getY()] = null;//移除地图上的角色数据
+        this.iterData.remove(roleModel);
     }
 
     /**
@@ -126,6 +128,7 @@ public class MapModel {
     public void retreatRole(RoleModel roleModel) {
         roleModel.getRoleType().retreatRole(roleModel);//移除阵容中的角色
         this.roleModels[roleModel.getX()][roleModel.getY()] = null;//移除地图上的角色数据
+        this.iterData.remove(roleModel);
     }
 
     /**
@@ -153,7 +156,7 @@ public class MapModel {
     /**
      * 运行一回合
      *
-     * @return 是否回合结束
+     * @return 是否战斗结束
      */
     public boolean run() throws Exception {
         round++;//增加一回合
@@ -163,23 +166,22 @@ public class MapModel {
             this.anEnum = RunEnum.SUCCESS;
             return true;
         }
-        while (!campList.isEmpty()) {
-            ICamp iCamp = IterModel.randomPop(campList);//随机获取阵营
-            Map<Class<? extends IRoleType>, List<RoleModel>> roleTypeRoleListMap = this.campMemRole.get(iCamp);//
-            if (roleTypeRoleListMap == null) break;
-            List<Class<? extends IRoleType>> iRoleTypeList = new ArrayList<>(roleTypeRoleListMap.keySet());//生成一个新的,还在场的阵营
-            while (!iRoleTypeList.isEmpty()) {
-                Class<? extends IRoleType> iRoleType = IterModel.randomPop(iRoleTypeList);//随机获取角色类型
-                List<RoleModel> roleModelsList = roleTypeRoleListMap.get(iRoleType);
-                List<RoleModel> roleModelsListIter = new ArrayList<>(roleModelsList);
-                for (RoleModel roleModel : roleModelsListIter) {
-                    roleModel.getCommand().proxyRun(roleModel);
-                }
+        List<RoleModel> allRoleList = this.campMemRole.values().stream().flatMap(roleTypeRoleListMap -> roleTypeRoleListMap.values().stream().flatMap(Collection::stream)).sorted((before, after) -> {
+            //根据角色的trick 从大到小排序  如果一样大 使用随机数概率排序
+            if (before.getTrick() == after.getTrick()) {
+                return new Random().nextInt(2) - 1;
             }
+            return before.getTrick() > after.getTrick() ? -1 : 1;
+        }).collect(Collectors.toList());
+        if (allRoleList.isEmpty()) return false;
+        iterData = new IterData<>(allRoleList);
+        while (iterData.hasNext()) {
+            RoleModel roleModel = iterData.next();
+            roleModel.getCommand().proxyRun(roleModel);
         }
-        DataCalc.sleep(50);
         return false;
     }
+
 
     /**
      * 获取距离目标最近的敌方角色
