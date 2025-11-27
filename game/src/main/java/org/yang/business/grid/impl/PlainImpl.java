@@ -14,26 +14,26 @@ public class PlainImpl extends IGrid {
 
 
     @Override
-    public void enter(RoleModel role) {
-        role.setCurrentActive(role.getCurrentActive() - act);
-
+    public boolean enter(RoleModel role) {
+        role.setCurrentActive(role.getCurrentActive() - this.act);
+        return false;
     }
 
     @Override
-    public void stay(RoleModel role) {
-
+    public boolean stay(RoleModel role) {
+        return false;
     }
 
     @Override
-    public void leave(RoleModel role) {
-
+    public boolean leave(RoleModel role) {
+        return false;
     }
 
     @Override
     public String toString() {
         JSONObject result = new JSONObject();
-        result.put("act", act);
-        result.put("name", name);
+        result.put("act", this.act);
+        result.put("name", this.name);
         return result.toJSONString();
     }
 }

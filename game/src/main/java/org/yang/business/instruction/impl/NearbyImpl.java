@@ -18,18 +18,20 @@ public class NearbyImpl extends ICommand {
 
     @Override
     public void run(RoleModel role) {
-        List<RoleModel> enemyRoleList = role.getWeapon().calcEnemyRole(role);//攻击范围内的所有敌方角色
-        if (enemyRoleList.isEmpty()) {//没有可以攻击的敌方角色,找到最近的敌方角色并且移动一步过去
-            RoleModel enemyRole = role.getMapModel().getRecentlyEnemyRole(role);
-            if (enemyRole == null) {//没有敌方目标
+        List<RoleModel> targetRoleList = role.getWeapon().calcEnemyRole(role);//攻击范围内的所有敌方角色
+        if (targetRoleList.isEmpty()) {//没有可以攻击的敌方角色,找到最近的敌方角色并且移动一步过去
+            log.info("没有可以攻击的敌方角色,找到最近的敌方角色并且移动一步过去");
+            RoleModel targetRole = role.calcRecentlyEnemyRole();
+            log.info("阵营{} 当前角色坐标 ({},{})最近的敌方角色:{}",role.getCamp().getName(), role.getX(), role.getY(), targetRole == null);
+            if (targetRole == null) {//战场上找不到地方目标
                 role.setCurrentActive(0);//不行动
                 return;
             }
-            role.getMapModel().moveDistance(role, enemyRole);//向指定目标方向移动一次
+            role.moveTargetLocation(targetRole.getX(), targetRole.getY());//向指定目标方向移动一次
         } else {//存在可以输出的敌方角色,直接输出
-            RoleModel enemyRole = DataCalc.getRandomUnit(enemyRoleList);
+            log.info("存在可以输出的敌方角色,直接输出");
+            RoleModel enemyRole = DataCalc.getRandomUnit(targetRoleList);
             role.getWeapon().proxyAct(role, enemyRole);
         }
-
     }
 }

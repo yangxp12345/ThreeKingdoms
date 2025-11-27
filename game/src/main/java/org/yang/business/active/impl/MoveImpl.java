@@ -21,13 +21,15 @@ public class MoveImpl extends IActive {
     private int targetX;//目标X
     private int targetY;//目标Y
 
-
-    public MoveImpl(RoleModel sourceRole, int x, int y) {
-        this.sourceX = sourceRole.getX();
-        this.sourceY = sourceRole.getY();
-        this.targetX = x;
-        this.targetY = y;
+    public MoveImpl(RoleModel roleModel,int sourceX, int sourceY,int targetX, int targetY){
+        this.sourceX = sourceX;
+        this.sourceY = sourceY;
+        this.targetX = targetX;
+        this.targetY = targetY;
     }
+
+
+
 
     @Override
     public String toString() {
@@ -39,4 +41,5 @@ public class MoveImpl extends IActive {
         result.put("targetY", targetY);
         return result.toJSONString();
     }
+
 }

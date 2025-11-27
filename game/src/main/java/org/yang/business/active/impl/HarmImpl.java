@@ -17,9 +17,9 @@ public class HarmImpl extends IActive {
     final private static String name = "伤害";
     private int targetX;//目标X
     private int targetY;//目标Y
-    private int harm;
+    private long harm;
 
-    public HarmImpl(RoleModel targetRole, int harm) {
+    public HarmImpl(RoleModel targetRole, long harm) {
 
         this.targetX = targetRole.getX();
         this.targetY = targetRole.getY();

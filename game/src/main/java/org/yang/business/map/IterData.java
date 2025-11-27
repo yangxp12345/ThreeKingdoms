@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * 可变迭代器
+ * 可变迭代器,用于遍历角色行动数据
  */
 public class IterData<T> {
     private LinkedList<T> dataList;

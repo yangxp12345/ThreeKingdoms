@@ -4,9 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
-import org.yang.springboot.init.annotation.MyRequestParam;
 import org.yang.springboot.init.file.FileRequestHandler;
-import org.yang.springboot.request.RequestParamModel;
 import org.yang.springboot.util.ResponseUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,7 +33,6 @@ public class Controller {
     /**
      * 自定义参数解析请求
      *
-     * @param param 封装参数
      * @return 测试结果
      */
     @RequestMapping("/param")

@@ -1,11 +1,9 @@
 package org.yang.springboot.socket;
 
-import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.yang.business.active.IActive;
-import org.yang.business.calc.DataCalc;
 
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
@@ -76,7 +74,6 @@ public class SocketServer {
      */
     public static void send(String camp, IActive active) {
         try {
-            DataCalc.sleep(sleep);
             for (Session session : sessionMap.values()) {
                 session.getBasicRemote().sendText(active.toString());
             }

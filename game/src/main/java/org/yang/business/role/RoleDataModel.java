@@ -1,4 +1,5 @@
 package org.yang.business.role;
+
 import lombok.Data;
 
 /**
@@ -6,6 +7,7 @@ import lombok.Data;
  */
 @Data
 public class RoleDataModel {
+    private int commander;//统帅
     private int health;//生命值
     private int attack;//攻击力
     private int defense;//防御力
@@ -28,6 +30,7 @@ public class RoleDataModel {
     private RoleDataModel() {//角色默认数据
         this(
                 100,
+                100,
                 20,
                 1,
                 1,
@@ -39,7 +42,8 @@ public class RoleDataModel {
         );
     }
 
-    public RoleDataModel(int health, int attack, int defense, int exempt, int hit, int dodge, int trick, int unity, int act) {
+    public RoleDataModel(int commander, int health, int attack, int defense, int exempt, int hit, int dodge, int trick, int unity, int act) {
+        this.commander = commander;//统帅
         this.health = health;//生命值
         this.attack = attack;//攻击力
         this.defense = defense;//防御力

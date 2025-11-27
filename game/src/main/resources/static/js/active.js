@@ -69,7 +69,7 @@ function act(jsonResp) {
 }
 
 /**
- * 撤退
+ * 逃命
  * @param jsonResp 控制参数
  */
 function retreat(jsonResp) {

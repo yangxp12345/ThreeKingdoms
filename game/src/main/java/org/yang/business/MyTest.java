@@ -3,7 +3,6 @@ package org.yang.business;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.yang.business.calc.DataCalc;
-import org.yang.business.camp.ICamp;
 import org.yang.business.camp.impl.BlackImpl;
 import org.yang.business.camp.impl.WhiteImpl;
 import org.yang.business.grade.impl.DeputyImpl;

@@ -1,7 +1,6 @@
 package org.yang.business.grid;
 
 import lombok.Data;
-import lombok.SneakyThrows;
 
 import lombok.extern.slf4j.Slf4j;
 import org.yang.business.calc.DataCalc;
@@ -46,35 +45,73 @@ public abstract class IGrid {
     }
 
 
+    /**
+     * 代理离开格子
+     *
+     * @param role 当前角色
+     * @return 返回是否存活
+     */
+    final public boolean proxyLeave(RoleModel role) {
+        RoleModel[][] roleModels = role.getMapModel().getRoleModels();
+        roleModels[role.getX()][role.getY()] = null;//删除地图上的角色数据
+        this.leave(role);//调用离开方法
+        return false;
+    }
 
-
-
-
+    /**
+     * 代理进入格子
+     *
+     * @param role 当前角色
+     * @return 返回是否存活
+     */
+    final public boolean proxyEnter(RoleModel role) {
+        role.getMapModel().getRoleModels()[role.getX()][role.getY()] = role;//重新设置地图上的角色数据
+        role.setGrid(this);//设置角色的格子
+        this.enter(role);//调用进入方法
+        return false;
+    }
 
 
     /**
      * 进入
+     *
+     * @param role 当前角色
+     * @return 是否阵亡
      */
-    public void enter(RoleModel role) {
+    protected boolean enter(RoleModel role) {
         DataCalc.showHint(this);
+        return false;
     }
 
 
     /**
      * 停留
+     *
+     * @param role 当前角色
+     * @return 是否阵亡
      */
-    public void stay(RoleModel role) {
+    public boolean stay(RoleModel role) {
         DataCalc.showHint(this);
+        return false;
     }
 
 
     /**
      * 离开
+     *
+     * @param role 当前角色
+     * @return 是否阵亡
      */
-    public void leave(RoleModel role) {
-        DataCalc.showHint(this);
+    protected abstract boolean leave(RoleModel role);
+
+
+    /**
+     * 是否没有行动力进入当前格子
+     *
+     * @param role 当前角色
+     * @return 是否能够进入
+     */
+    final public boolean isEnterFailure(RoleModel role) {
+        return role.getCurrentActive() < this.getAct();
     }
-
-
-
 }

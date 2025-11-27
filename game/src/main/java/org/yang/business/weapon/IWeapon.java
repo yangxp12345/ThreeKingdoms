@@ -21,7 +21,7 @@ import java.util.Set;
 public abstract class IWeapon {
 
     final static private String name = "士兵武器";
-    final private int active = 1;//行动消耗
+    final private int active = 0;//行动消耗
     final static public Map<Class<? extends IWeapon>, IWeapon> classMap = new HashMap<>();
     final static public Map<String, IWeapon> nameMap = new HashMap<>();
 
@@ -52,7 +52,7 @@ public abstract class IWeapon {
      * 代理行动
      *
      * @param role      角色
-     * @param enemyRole 敌方角色
+     * @param enemyRole 主要的敌方角色
      */
     final public void proxyAct(RoleModel role, RoleModel enemyRole) {
         if (role.getCurrentActive() < this.getActive()) {
@@ -61,10 +61,6 @@ public abstract class IWeapon {
         }
         role.setCurrentActive(role.getCurrentActive() - this.getActive());//允许攻击 更新行动力
 
-        if (isFrighten(role, enemyRole)) {//被震慑
-            SocketServer.send(role.getCamp().getName(), new FrightenImpl(role, enemyRole));
-            return;
-        }
         if (!isHit(role, enemyRole)) {//未命中
             SocketServer.send(role.getCamp().getName(), new MissImpl(enemyRole));
             return;
@@ -88,7 +84,7 @@ public abstract class IWeapon {
      * @param role      角色
      * @param enemyRole 敌方角色
      */
-    public abstract void calcHurt(RoleModel role, RoleModel enemyRole);
+    protected abstract void calcHurt(RoleModel role, RoleModel enemyRole);
 
 
     /**
@@ -107,26 +103,6 @@ public abstract class IWeapon {
         return true;
     }
 
-    /**
-     * 是否被震慑
-     * (周围队友提供胆+自己胆)/ (周围队友提供胆+自己胆+目标胆)
-     *
-     * @param role      当前角色
-     * @param enemyRole 目标角色
-     * @return 是否被震慑
-     */
-    private boolean isFrighten(RoleModel role, RoleModel enemyRole) {
-        //根据当前角色周围的队友数量决定部分输出
-        List<RoleModel> teammateRoleList = role.calcTeammateRoleList();//获取队友
-        //求和
-        int teammateUnitySum = teammateRoleList.stream().map(RoleModel::getUnity).mapToInt(Integer::intValue).sum();//周围队友提供胆魄
-        if (DataCalc.isProbabilityTrigger((teammateUnitySum + role.getUnity()) * 1D / (teammateUnitySum + role.getUnity() + enemyRole.getUnity()))) {
-            return false;//未被震慑
-        }
-        log.info("输出 阵容:{}, 编码:{}, 角色:{}, 坐标:({},{})  =>  阵容:{}, 编码:{}, 角色:{}, 坐标:({},{}) 被目标震慑,剩余生命:{}", role.getCamp().getName(), role.getId(), role.getRoleType().getName(), role.getX(), role.getY(), enemyRole.getCamp().getName(), enemyRole.getId(), enemyRole.getRoleType().getName(), enemyRole.getX(), enemyRole.getY(), enemyRole.getCurrentHealth());
-        return true;//被震慑
-    }
-
 
     /**
      * 伤害计算
@@ -135,29 +111,32 @@ public abstract class IWeapon {
      * @param enemyRole 目标角色
      * @param multiple  倍数
      */
-    public void damageMultiplier(RoleModel role, RoleModel enemyRole, int multiple) {
-
+    protected long damageMultiplier(RoleModel role, RoleModel enemyRole, double multiple) {
         List<RoleModel> teammateRoleList = role.calcTeammateRoleList();//获取队友
-        List<RoleModel> enemyRoleList = role.calcEnemyRoleList();//获取敌人
-
-        //附近人数加成
+        List<RoleModel> enemyRoleList = role.calcAroundEnemyRoleList();//获取敌人
+        //主将伤害加成
+        double generalAdd = role.calcGeneralRoleModel().stream().map(RoleModel::getAttack).mapToLong(x -> x).sum() * 0.05;
+        //副将伤害加成
+        double deputyAdd = role.calcDeputyRoleModel().stream().map(RoleModel::getAttack).mapToLong(x -> x).sum() * 0.01;
+        //附近人数加成[1/8 ,1] 周围队友人数/周围总人数=加成()周围包含自己
         double peopleBonus = enemyRoleList.isEmpty() ? 1 : ((1D + teammateRoleList.size()) / (1D + teammateRoleList.size() + enemyRoleList.size()));
-        //当前角色的技巧加成比例
+        //当前角色的技巧加成比例  自己的技巧/(自己的技巧+目标的技巧)
         double proportionTrick = role.getTrick() * 1D / (role.getTrick() + enemyRole.getDefense());
-        //当前角色的健康加成比例
+        //当前角色的健康加成比例   自己的生命/生命上限
         double proportionHealth = 1D * role.getCurrentHealth() / role.getCumulativeHealth();
-
-        double valueDouble = multiple * role.getAttack() * peopleBonus * proportionTrick * proportionHealth - enemyRole.getExempt();
-        int value = Math.max(DataCalc.toInt(valueDouble), 1);//最低伤害为1
+        double roleAtkAdd = role.getAttack() + generalAdd + deputyAdd;//计算经过主将副将加成后的攻击力
+        double valueDouble = multiple * roleAtkAdd * peopleBonus * proportionTrick * proportionHealth - enemyRole.getExempt();
+        long value = Math.max(DataCalc.toLong(valueDouble), 1);//最低伤害为1
         // 角色技能加成
         SocketServer.send(role.getCamp().getName(), new HarmImpl(enemyRole, value));
         enemyRole.setCurrentHealth(enemyRole.getCurrentHealth() - value);
         log.info("输出 阵容:{}, 编码:{}, 角色:{}, 坐标:({},{})  =>  阵容:{}, 编码:{}, 角色:{}, 坐标:({},{}) 伤害:{} ,剩余生命:{}", role.getCamp().getName(), role.getId(), role.getRoleType().getName(), role.getX(), role.getY(), enemyRole.getCamp().getName(), enemyRole.getId(), enemyRole.getRoleType().getName(), enemyRole.getX(), enemyRole.getY(), value, enemyRole.getCurrentHealth());
         if (enemyRole.getCurrentHealth() <= 0) {
             log.info("阵容:{}, 级别:{}, 编号:{}, 坐标:({},{}) 被击杀", enemyRole.getCamp().getName(), enemyRole.getRoleType().getName(), enemyRole.getId(), enemyRole.getX(), enemyRole.getY());
-            role.getMapModel().killRole(enemyRole);
+            role.getMapModel().killRole(enemyRole);//击杀角色
             SocketServer.send(role.getCamp().getName(), new KillImpl(enemyRole));
         }
+        return value;
     }
 
 }

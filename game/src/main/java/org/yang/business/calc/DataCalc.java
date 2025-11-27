@@ -70,7 +70,7 @@ public class DataCalc {
      * @return 随机元素
      */
     public static <T> T getRandomUnit(List<T> list) {
-        return list.get(getRandom(0, list.size() - 1));
+        return list.get((int) getRandom(0, list.size() - 1));
     }
 
     /**
@@ -80,9 +80,8 @@ public class DataCalc {
      * @param max 最大值
      * @return 返回区间内部的随机数 闭区间
      */
-    public static int getRandom(int min, int max) {
-        long round = Math.round(Math.random() * (max - min) + min);
-        return (int) round;
+    public static long getRandom(long min, long max) {
+        return Math.round(Math.random() * (max - min) + min);
     }
 
     /**
@@ -92,7 +91,7 @@ public class DataCalc {
      * @param upperLimit 概率上限
      * @return 是否触发
      */
-    public static boolean isProbabilityTrigger(int threshold, int upperLimit) {
+    public static boolean isProbabilityTrigger(long threshold, long upperLimit) {
         return getRandom(1, upperLimit) <= threshold;
     }
 
@@ -112,9 +111,8 @@ public class DataCalc {
      * @param value 值
      * @return 整数
      */
-    public static int toInt(double value) {
-        long round = Math.round(value);
-        return (int) round;
+    public static long toLong(double value) {
+        return Math.round(value);
     }
 
     /**
@@ -156,4 +154,9 @@ public class DataCalc {
         return result;
     }
 
+    public static <T> void removeCollection(List<T> source, List<T> target) {
+        for (T unit : target) {
+            source.remove(unit);
+        }
+    }
 }

@@ -4,7 +4,12 @@ import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.yang.business.active.IActive;
+import org.yang.business.active.impl.MoveImpl;
 import org.yang.business.calc.DataCalc;
+import org.yang.business.grade.impl.DeputyImpl;
+import org.yang.business.grade.impl.GeneralImpl;
+import org.yang.business.grade.impl.SoldierImpl;
 import org.yang.business.grid.IGrid;
 import org.yang.business.instruction.ICommand;
 import org.yang.business.instruction.impl.StandByImpl;
@@ -12,8 +17,10 @@ import org.yang.business.map.MapModel;
 import org.yang.business.camp.ICamp;
 import org.yang.business.grade.IRoleType;
 import org.yang.business.weapon.IWeapon;
+import org.yang.springboot.socket.SocketServer;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 角色的指标值模型
@@ -23,6 +30,7 @@ import java.util.*;
 public class RoleModel {
     private transient MapModel mapModel;//角色地图
     private int id;//角色的id
+    private String name;//角色名称
     private ICommand command;//指令 默认待命
     private int x;//角色所在的坐标
     private int y;//角色所在的坐标
@@ -30,18 +38,21 @@ public class RoleModel {
     private IRoleType roleType; //身份类型
     private IWeapon weapon;//武器
 
+
+    private int commander;//统帅力 只有将 士兵没有
+
     private IGrid grid;
-    private int currentHealth;//当前生命值
-    private int cumulativeHealth;//累计生命值
-    private int attack;//攻击力
-    private int trick;//技巧 技巧远远大于防御力
-    private int defense;//防御力
-    private int exempt;//伤害最终减免
-    private int hit;//命中   命中远远大于闪避
-    private int dodge;//闪避
-    private int unity;//胆魄
-    private int currentActive;//当前剩余行动力
-    private int cumulativeActive;//累计行动力
+    private long currentHealth;//当前生命值
+    private long cumulativeHealth;//累计生命值
+    private long attack;//攻击力
+    private long trick;//技巧 技巧远远大于防御力
+    private long defense;//防御力
+    private long exempt;//伤害最终减免
+    private long hit;//命中   命中远远大于闪避
+    private long dodge;//闪避
+    private long unity;//胆魄
+    private long currentActive;//当前剩余行动力
+    private long cumulativeActive;//累计行动力
 
 
     public RoleModel() {//构造函数不允许构造 defaultRoleModel,防止递归死循环
@@ -89,6 +100,7 @@ public class RoleModel {
      * @param roleDataModel 数据模型对象
      */
     private void setRoleDataModel(RoleDataModel roleDataModel) {
+        this.commander = roleDataModel.getCommander();
         this.currentHealth = roleDataModel.getHealth();
         this.cumulativeHealth = roleDataModel.getHealth();
         this.attack = roleDataModel.getAttack();
@@ -100,20 +112,6 @@ public class RoleModel {
         this.unity = roleDataModel.getUnity();
         this.currentActive = roleDataModel.getAct();
         this.cumulativeActive = roleDataModel.getAct();
-    }
-
-
-    /**
-     * 判断指定位置是否是盟友
-     *
-     * @param currentX 横坐标
-     * @param currentY 纵坐标
-     * @return true:是盟友,false:不是盟友
-     */
-    public boolean calcTeammateRole(int currentX, int currentY) {
-        if (this.getMapModel().isCrossMap(currentX, currentY)) return false;//越界
-        if (this.getMapModel().getRoleModels()[currentX][currentY] == null) return false;//空节点
-        return this.getMapModel().getRoleModels()[currentX][currentY].getCamp() == this.getCamp();//不同阵营
     }
 
 
@@ -130,6 +128,47 @@ public class RoleModel {
         return this.getMapModel().getRoleModels()[currentX][currentY].getCamp() != this.getCamp();//不同阵营
     }
 
+    /**
+     * 判断指定位置是否是队友
+     *
+     * @param currentX 横坐标
+     * @param currentY 纵坐标
+     * @return true:是盟友,false:不是盟友
+     */
+    public boolean calcTeammateRole(int currentX, int currentY) {
+        if (this.getMapModel().isCrossMap(currentX, currentY)) return false;//越界
+        if (this.getMapModel().getRoleModels()[currentX][currentY] == null) return false;//空节点
+        return this.getMapModel().getRoleModels()[currentX][currentY].getCamp() == this.getCamp();//相同阵营
+    }
+
+
+    /**
+     * 获取主将角色列表
+     *
+     * @return 主将角色列表
+     */
+    public List<RoleModel> calcGeneralRoleModel() {
+        return this.getMapModel().getCampMemRole().values().stream().filter(unit -> (unit.getRoleType() instanceof GeneralImpl) && unit.getCamp() == this.getCamp()).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取副将角色列表
+     *
+     * @return 副将角色列表
+     */
+    public List<RoleModel> calcDeputyRoleModel() {
+        return this.getMapModel().getCampMemRole().values().stream().filter(unit -> (unit.getRoleType() instanceof DeputyImpl) && unit.getCamp() == this.getCamp()).collect(Collectors.toList());
+    }
+
+
+    /**
+     * 获取士兵角色列表
+     *
+     * @return 副将角色列表
+     */
+    public List<RoleModel> calcSoldierRoleModel() {
+        return this.getMapModel().getCampMemRole().values().stream().filter(unit -> (unit.getRoleType() instanceof SoldierImpl) && unit.getCamp() == this.getCamp()).collect(Collectors.toList());
+    }
 
     /**
      * 计算周围一圈的队友
@@ -162,7 +201,7 @@ public class RoleModel {
      *
      * @return 返回队友列表
      */
-    public List<RoleModel> calcEnemyRoleList() {
+    public List<RoleModel> calcAroundEnemyRoleList() {
         List<RoleModel> roleList = new ArrayList<>();
         int x = this.getX();
         int y = this.getY();
@@ -184,80 +223,201 @@ public class RoleModel {
     }
 
     /**
-     * 向敌方角色移动的最优选择方案
+     * 计算四周的短兵敌人列表
      *
-     * @param enemyRole 敌方角色
-     * @return 返回可以移动的坐标方案
+     * @return 返回短兵敌人列表
      */
-    public Map.Entry<Integer, Integer> calcBestCoordinate(RoleModel enemyRole) {
+    public List<RoleModel> calcShortSoldierEnemyRoleList() {
+        List<RoleModel> roleList = new ArrayList<>();
         int x = this.getX();
         int y = this.getY();
-        int enemyX = enemyRole.getX();
-        int enemyY = enemyRole.getY();
-        int gapX = enemyX - x;//相对坐标值X
-        int gapY = enemyY - y;//相对坐标值Y
-        int tempX;
-        int tempY;
-        //比较相对坐标gapX,gapY的绝对值 让最大的相对坐标值更靠近0 ,如果最大的相对坐标值无法修改到靠近0(比如靠近的格子被占用) 将小的相对坐标值随机变化,小的相对坐标绝对值值不能变的比最大的坐标绝对值还要大
+        RoleModel[][] roleModels = this.getMapModel().getRoleModels();
         List<Map.Entry<Integer, Integer>> coordinateList = new ArrayList<>();
-        if (Math.abs(gapX) > Math.abs(gapY)) {//优先修改X
-            tempX = x + (gapX > 0 ? 1 : -1);//X距离变小
-            coordinateList.add(new AbstractMap.SimpleEntry<>(tempX, y));
-            tempY = y + (gapY > 0 ? 1 : -1);//Y距离变小
-            coordinateList.add(new AbstractMap.SimpleEntry<>(x, tempY));//其次修改Y
-            tempY = y + (gapY > 0 ? -1 : 1);//Y距离反向
-            coordinateList.add(new AbstractMap.SimpleEntry<>(x, tempY));//其次修改Y
-        } else if (Math.abs(gapX) < Math.abs(gapY)) {//优先修改Y
-            tempY = y + (gapY > 0 ? 1 : -1);//Y距离变小
-            coordinateList.add(new AbstractMap.SimpleEntry<>(x, tempY));
-            tempX = x + (gapX > 0 ? 1 : -1);//X距离变小
-            coordinateList.add(new AbstractMap.SimpleEntry<>(tempX, y));
-            tempX = x + (gapX > 0 ? -1 : 1);//X距离变大
-            coordinateList.add(new AbstractMap.SimpleEntry<>(tempX, y));
-        } else {//相等
-            //XY随机顺序
-            boolean probabilityTrigger = DataCalc.isProbabilityTrigger(0.5);
-            if (probabilityTrigger) {
-                tempY = y + (gapY > 0 ? 1 : -1);//Y距离变小
-                coordinateList.add(new AbstractMap.SimpleEntry<>(x, tempY));
-                tempX = x + (gapX > 0 ? 1 : -1);//X距离变小
-                coordinateList.add(new AbstractMap.SimpleEntry<>(tempX, y));
-            } else {
-                tempX = x + (gapX > 0 ? 1 : -1);//X距离变小
-                coordinateList.add(new AbstractMap.SimpleEntry<>(tempX, y));
-                tempY = y + (gapY > 0 ? 1 : -1);//Y距离变小
-                coordinateList.add(new AbstractMap.SimpleEntry<>(x, tempY));
-            }
+        coordinateList.add(new AbstractMap.SimpleEntry<>(x - 1, y));
+        coordinateList.add(new AbstractMap.SimpleEntry<>(x, y - 1));
+        coordinateList.add(new AbstractMap.SimpleEntry<>(x, y + 1));
+        coordinateList.add(new AbstractMap.SimpleEntry<>(x + 1, y));
+        for (Map.Entry<Integer, Integer> entry : coordinateList) {
+            if (calcEnemyRole(entry.getKey(), entry.getValue()))
+                roleList.add(roleModels[entry.getKey()][entry.getValue()]);
         }
+        return roleList;
+    }
+
+    /**
+     * 向目标坐标移动的最优选择方案
+     *
+     * @param targetX     目标坐标
+     * @param targetY     目标坐标
+     * @param probability 如果角色没有最优的移动方案 多大的概率会乱走
+     * @return 返回可以移动的坐标方案
+     */
+    private Map.Entry<Integer, Integer> calcBestCoordinate(int targetX, int targetY, double probability) {
+        int x = this.getX();
+        int y = this.getY();
+
+        int gapX = targetX - x;//相对坐标值X
+        int gapY = targetY - y;//相对坐标值Y
+
+        int absX = Math.abs(gapX);
+        int absY = Math.abs(gapY);
+        int maxDistance = Math.max(absX, absY);//计算最大距离
+
+        boolean xExpand = (gapX == 0) ? (DataCalc.isProbabilityTrigger(0.5)) : (gapX > 0);//靠近敌方 x是否变大?
+        boolean yExpand = (gapY == 0) ? (DataCalc.isProbabilityTrigger(0.5)) : (gapY > 0);//靠近敌方 y是否变大?
+        boolean xPriority = (absX == absY) ? DataCalc.isProbabilityTrigger(0.5) : (absX > absY);//优先移动X轴吗?
+
+        List<Map.Entry<Integer, Integer>> coordinateList = new ArrayList<>();
+        if (xPriority) {//优先移动X轴
+            coordinateList.add(new AbstractMap.SimpleEntry<>(x + (xExpand ? 1 : -1), y));
+            coordinateList.add(new AbstractMap.SimpleEntry<>(x, y + (yExpand ? 1 : -1)));
+            coordinateList.add(new AbstractMap.SimpleEntry<>(x, y - (yExpand ? 1 : -1)));
+            coordinateList.add(new AbstractMap.SimpleEntry<>(x - (xExpand ? 1 : -1), y));
+        } else {//优先移动Y轴
+            coordinateList.add(new AbstractMap.SimpleEntry<>(x, y + (yExpand ? 1 : -1)));
+            coordinateList.add(new AbstractMap.SimpleEntry<>(x + (xExpand ? 1 : -1), y));
+            coordinateList.add(new AbstractMap.SimpleEntry<>(x - (xExpand ? 1 : -1), y));
+            coordinateList.add(new AbstractMap.SimpleEntry<>(x, y - (yExpand ? 1 : -1)));
+        }
+        List<Map.Entry<Integer, Integer>> coordinateBestList = new ArrayList<>();//最优的坐标集合
+        List<Map.Entry<Integer, Integer>> coordinateDetourList = new ArrayList<>();//绕开的坐标集合
 
         for (Map.Entry<Integer, Integer> coordinateUnit : coordinateList) {
             Integer currentX = coordinateUnit.getKey();
             Integer currentY = coordinateUnit.getValue();
-            if (!this.mapModel.isCrossMap(currentX, currentY) &&//没有越界,并且有空间 并且有移动多余的行动力气
-                    this.mapModel.getRoleModels()[currentX][currentY] == null &&//目标位置有空间
-                    this.mapModel.getGrids()[currentX][currentY].getAct() < this.getCurrentActive() //移动消耗行动力小于当前角色行动力
-            ) {//移动角色
-                //注意顺序 需要先设置行动后再设置坐标,否则行动坐标会被覆盖
-                return new AbstractMap.SimpleEntry<>(currentX, currentY);
+            if (this.mapModel.isCrossMap(currentX, currentY)) continue;//越界 非法坐标  不参与计算
+            if (this.mapModel.getRoleModels()[currentX][currentY] != null) continue;//节点被占用  不参与计算
+            if (this.mapModel.getGrids()[currentX][currentY].isEnterFailure(this)) continue;//行动力不足
+            Map.Entry<Integer, Integer> coordinateDetour = new AbstractMap.SimpleEntry<>(currentX, currentY);
+            //判断是否绕路
+            if (maxDistance < Math.max(Math.abs(targetX - currentX), Math.abs(targetY - currentY))) {//绕路
+                coordinateDetourList.add(coordinateDetour);
+            } else {//没绕路
+                coordinateBestList.add(coordinateDetour);
             }
         }
+        if (!coordinateBestList.isEmpty()) return coordinateBestList.get(0);//返回最优的第一个坐标
+        //不存在最优坐标,不存在绕道坐标
+        if (coordinateDetourList.isEmpty()) return null;
+        //只有绕道坐标 多大概率绕道
+        return DataCalc.isProbabilityTrigger(probability) ? coordinateDetourList.get(0) : null;
+    }
+
+
+    /**
+     * 向目标方向移动
+     *
+     * @param targetX 坐标X
+     * @param targetY 坐标Y
+     */
+    public void moveTargetLocation(int targetX, int targetY) {
+        Map.Entry<Integer, Integer> coordinate = this.calcBestCoordinate(targetX, targetY, 0.1);//获取移动方案
+        //是否可以移动
+        if (coordinate != null) {//可以移动
+            IActive iActive = new MoveImpl(this, this.getX(), this.getY(), coordinate.getKey(), coordinate.getValue());//记录当前角色的移动方案
+            if (this.getGrid().proxyLeave(this)) return;//离开格子
+            this.setCoordinate(coordinate.getKey(), coordinate.getValue());//设置角色的新坐标
+            if (this.getGrid().proxyEnter(this)) return;//进入格子
+            SocketServer.send(this.getCamp().getName(), iActive);//记录移动命令
+        } else {//无法移动 丢失所有行动力
+            this.setCurrentActive(0);
+        }
+    }
+
+    /**
+     * 随机移动
+     */
+    public void moveRandom() {
+        log.info("不听指令 乱走");
+        List<Map.Entry<Integer, Integer>> coordinateList = new ArrayList<>();//当前角色的周围四个坐标
+        List<Map.Entry<Integer, Integer>> coordinateNewList = new ArrayList<>();//当前角色可以移动的坐标
+        coordinateList.add(new AbstractMap.SimpleEntry<>(this.x - 1, this.y));
+        coordinateList.add(new AbstractMap.SimpleEntry<>(this.x + 1, this.y));
+        coordinateList.add(new AbstractMap.SimpleEntry<>(this.x, this.y - 1));
+        coordinateList.add(new AbstractMap.SimpleEntry<>(this.x, this.y + 1));
+
+        for (Map.Entry<Integer, Integer> coordinate : coordinateList) {
+            Integer targetX = coordinate.getKey();
+            Integer targetY = coordinate.getValue();
+            if (this.mapModel.isCrossMap(targetX, targetY)) continue;//越界 非法坐标  不参与计算
+            if (this.mapModel.getRoleModels()[targetX][targetY] != null) continue;//节点被占用  不参与计算
+            if (this.mapModel.getGrids()[targetX][targetY].isEnterFailure(this)) continue;//行动力不足
+            coordinateNewList.add(coordinate);
+        }
+        //是否可以移动
+        if (!coordinateNewList.isEmpty()) {//可以移动
+            Map.Entry<Integer, Integer> randomUnit = DataCalc.getRandomUnit(coordinateNewList);
+            moveTargetLocation(randomUnit.getKey(), randomUnit.getValue());
+        } else {//无法移动 丢失所有行动力
+            this.setCurrentActive(0);
+        }
+    }
+
+
+    /**
+     * 获取距离目标最近的敌方角色
+     *
+     * @return 距离目标角色最近的角色
+     */
+    public RoleModel calcRecentlyEnemyRole() {
+        int maxLength = this.mapModel.getX() + this.mapModel.getY() - 1;
+        for (int distance = 1; distance < maxLength; distance++) {
+            List<RoleModel> enemyRoleList = calcDistanceEnemyRoleList(distance);
+            if (enemyRoleList.isEmpty()) continue;
+            return DataCalc.getRandomUnit(enemyRoleList);
+        }
+        log.info("当前角色id: [{}], 没有找到敌方目标", this.getId());//没有目标
         return null;
     }
 
-    public List<Map.Entry<Integer, Integer>> calcAllCoordinate() {
-        List<Map.Entry<Integer, Integer>> allMoveCoordinateList = new ArrayList<>();
-        List<Map.Entry<Integer, Integer>> allCoordinateList = new ArrayList<>();
-        allCoordinateList.add(new AbstractMap.SimpleEntry<>(this.x - 1, y));
-        allCoordinateList.add(new AbstractMap.SimpleEntry<>(this.x + 1, y));
-        allCoordinateList.add(new AbstractMap.SimpleEntry<>(this.x, y - 1));
-        allCoordinateList.add(new AbstractMap.SimpleEntry<>(this.x, y + 1));
-        for (Map.Entry<Integer, Integer> entry : allCoordinateList) {
-            if (!this.getMapModel().isCrossMap(entry.getKey(), entry.getValue()) && this.getMapModel().getRoleModels()[entry.getKey()][entry.getValue()] == null) {
-                allMoveCoordinateList.add(new AbstractMap.SimpleEntry<>(entry.getKey(), entry.getValue()));
+
+    /**
+     * 获取指定距离的敌对角色列表
+     *
+     * @param distance 指定的距离
+     * @return 返回敌对角色列表
+     */
+    public List<RoleModel> calcDistanceEnemyRoleList(int distance) {
+        List<RoleModel> enemyRoleList = new ArrayList<>();//获取距离当前目标指定距离的所有敌方角色
+        RoleModel[][] roleModels = this.getMapModel().getRoleModels();
+        for (int currentX = -distance; currentX <= distance; currentX++) {
+            int currentY = distance - Math.abs(currentX);
+            if (currentY != 0) {
+                if (calcEnemyRole(this.getX() + currentX, this.getY() - currentY))
+                    enemyRoleList.add(roleModels[this.getX() + currentX][this.getY() - currentY]);
             }
+            if (calcEnemyRole(this.getX() + currentX, this.getY() + currentY))
+                enemyRoleList.add(roleModels[this.getX() + currentX][this.getY() + currentY]);
         }
-        return allMoveCoordinateList;
+        return enemyRoleList;
     }
+
+    public static void main(String[] args) {
+        List<RoleModel> roleModels = new RoleModel().calcDistanceEnemyRoleList(2);
+    }
+
+
+    /**
+     * 获取指定距离的队友角色列表
+     *
+     * @param distance 指定的距离
+     * @return 返回敌对角色列表
+     */
+    public List<RoleModel> calcDistanceTeammateRoleList(int distance) {
+        List<RoleModel> enemyRoleList = new ArrayList<>();//获取距离当前目标指定距离的所有敌方角色
+        RoleModel[][] roleModels = this.getMapModel().getRoleModels();
+        for (int currentX = -distance; currentX <= distance; currentX++) {
+            int currentY = distance - Math.abs(currentX);
+            if (currentY != 0) {
+                if (calcTeammateRole(this.getX() + currentX, this.getY() - currentY))
+                    enemyRoleList.add(roleModels[this.getX() + currentX][this.getY() - currentY]);
+            }
+            if (calcTeammateRole(this.getX() + currentX, this.getY() + currentY))
+                enemyRoleList.add(roleModels[this.getX() + currentX][this.getY() + currentY]);
+        }
+        return enemyRoleList;
+    }
+
 
     public JSONObject toJSON() {
         JSONObject result = new JSONObject();
@@ -281,5 +441,10 @@ public class RoleModel {
         result.put("currentActive", currentActive);
         result.put("cumulativeActive", cumulativeActive);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return toJSON().toJSONString();
     }
 }

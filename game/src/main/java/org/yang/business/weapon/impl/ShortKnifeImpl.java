@@ -11,15 +11,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 赤手空拳
+ * 短刀
  * 可以对周围4格进行单点输出
  */
 @Slf4j
 @Data
-public class UnarmedImpl extends IWeapon {
-    final private String name = "赤手空拳";
-    final private String msg = "可以对四周的某个位置近距离进行一次弱化的输出";
-    final private int active = 1;//攻击行动消耗
+public class ShortKnifeImpl extends IWeapon {
+    final private String name = "短刀";
+    final private String msg = "可以对四周的某个位置近距离进行一次常规输出";
+    final private int active = 2;//攻击行动消耗
 
 
     /**
@@ -40,7 +40,7 @@ public class UnarmedImpl extends IWeapon {
      */
     @Override
     public void calcHurt(RoleModel role, RoleModel enemyRole) {
-        damageMultiplier(role, enemyRole, 0.3);//按照倍率进行输出伤害 单倍输出
+        damageMultiplier(role, enemyRole, 1);//按照倍率进行输出伤害 单倍输出
         //是否存在衍射伤害
     }
 
