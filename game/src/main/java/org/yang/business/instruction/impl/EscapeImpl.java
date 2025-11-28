@@ -30,6 +30,7 @@ public class EscapeImpl extends ICommand {
         if (status) {//可以成功撤退
             log.info("阵容:{}, 级别:{}, 编号:{}, 坐标:({},{}) 指令:{} 撤退成功", role.getCamp().getName(), role.getRoleType().getName(), role.getId(), role.getX(), role.getY(), name);
             role.getMapModel().retreatRole(role);//处理撤退的角色
+            role.calcChangeRoleUnity(-2);//撤退士气降低2
             role.setCurrentActive(0);
             SocketServer.send(role.getCamp().getName(), new RetreatImpl(role));//撤退行动通知
         } else {//无法撤退 向营地移动

@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.yang.business.buff.IBuff;
 import org.yang.business.calc.DataCalc;
 import org.yang.business.camp.ICamp;
 import org.yang.business.grade.IRoleType;
@@ -38,6 +39,7 @@ public class MapModel {
     private int X;//地图坐标上限
     private int Y;
     private transient int round;//回合数
+    private transient int unityAddRound = 10;//多少个回合增加士气
 
 
     public MapModel() {
@@ -66,6 +68,24 @@ public class MapModel {
     public boolean run() throws Exception {
         this.round++;//增加一回合
         log.info("第[{}]回合", this.round);
+        //buff持续作用
+        List<RoleModel> allBuffList = this.campMemRole.values().stream().sorted((before, after) -> {//根据角色的trick(技巧) 从大到小排序  如果二者大小一样,便使用随机排序
+            if (before.getTrick() == after.getTrick()) return new Random().nextInt(2) - 1;
+            return before.getTrick() > after.getTrick() ? -1 : 1;
+        }).collect(Collectors.toList());
+        if (allBuffList.isEmpty()) return true;//没有可以控制的角色 战斗结束
+        IterData<RoleModel> buffRoleIter = new IterData<>(allBuffList);//复制对象,迭代处理
+        while (buffRoleIter.hasNext()) {//遍历角色
+            RoleModel roleModel = buffRoleIter.next();
+            List<IBuff> iBuffs = new ArrayList<>(roleModel.getIBuffMap().values());
+            IterData<IBuff> buffIter = new IterData<>(iBuffs);//复制对象,迭代处理
+            while (buffIter.hasNext()) {//遍历一个角色的buff
+                IBuff iBuff = buffIter.next();
+                iBuff.proxySustain(roleModel);
+            }
+        }
+
+
         //清空上一次的行动记录
         int campSize = this.campMemRole.values().stream().map(RoleModel::getCamp).collect(Collectors.toSet()).size();//存活阵容数量
         if (campSize == 1) return true;//只剩下一个阵容 战斗结束
@@ -80,7 +100,9 @@ public class MapModel {
             roleModel.getCommand().proxyRun(roleModel);
         }
         //每一回合胆魄加1
-        this.campMemRole.values().forEach(unit -> unit.setUnity(unit.getUnity() + 1));
+        if (this.round % unityAddRound == 0) {
+            this.campMemRole.values().forEach(unit -> unit.setUnity(unit.getUnity() + 1));
+        }
         return false;//战斗未结束
     }
 
@@ -137,6 +159,7 @@ public class MapModel {
         MapModel mapModel = roleModel.getMapModel();
         mapModel.removeRole(roleModel);//清理地图数据
         mapModel.getKillRoleList().add(roleModel);//添加击杀数据
+
     }
 
 

@@ -24,6 +24,9 @@ public abstract class IWeapon {
     final private int active = 0;//行动消耗
     final static public Map<Class<? extends IWeapon>, IWeapon> classMap = new HashMap<>();
     final static public Map<String, IWeapon> nameMap = new HashMap<>();
+    final static public int killUnity = 3;//击杀士气变化
+    final static public int KilledUnity = -6;//阵亡士气变化
+
 
     static {
         try {
@@ -133,10 +136,12 @@ public abstract class IWeapon {
         log.info("输出 阵容:{}, 编码:{}, 角色:{}, 坐标:({},{})  =>  阵容:{}, 编码:{}, 角色:{}, 坐标:({},{}) 伤害:{} ,剩余生命:{}", role.getCamp().getName(), role.getId(), role.getRoleType().getName(), role.getX(), role.getY(), enemyRole.getCamp().getName(), enemyRole.getId(), enemyRole.getRoleType().getName(), enemyRole.getX(), enemyRole.getY(), value, enemyRole.getCurrentHealth());
         if (enemyRole.getCurrentHealth() <= 0) {
             log.info("阵容:{}, 级别:{}, 编号:{}, 坐标:({},{}) 被击杀", enemyRole.getCamp().getName(), enemyRole.getRoleType().getName(), enemyRole.getId(), enemyRole.getX(), enemyRole.getY());
+
             role.getMapModel().killRole(enemyRole);//击杀角色
+            role.calcChangeRoleUnity(killUnity);//击杀增加士气
+            enemyRole.calcChangeRoleUnity(KilledUnity);//阵亡降低士气
             SocketServer.send(role.getCamp().getName(), new KillImpl(enemyRole));
         }
         return value;
     }
-
 }

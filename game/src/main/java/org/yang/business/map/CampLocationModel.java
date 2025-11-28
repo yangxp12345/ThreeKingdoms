@@ -52,5 +52,4 @@ public class CampLocationModel {
             throw new RuntimeException(String.format("阵营(%s)已存在,坐标: (%d,%d)", camp.getName(), x, y));
         campLocationMap.put(camp, new CampLocation(camp, x, y));
     }
-
 }

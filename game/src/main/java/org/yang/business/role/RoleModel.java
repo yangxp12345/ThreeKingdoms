@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.yang.business.active.IActive;
 import org.yang.business.active.impl.MoveImpl;
+import org.yang.business.buff.IBuff;
 import org.yang.business.calc.DataCalc;
 import org.yang.business.grade.impl.DeputyImpl;
 import org.yang.business.grade.impl.GeneralImpl;
@@ -37,6 +38,7 @@ public class RoleModel {
     private ICamp camp;//所属阵营
     private IRoleType roleType; //身份类型
     private IWeapon weapon;//武器
+    private transient Map<String, IBuff> iBuffMap;
 
 
     private int commander;//统帅力 只有将 士兵没有
@@ -78,9 +80,34 @@ public class RoleModel {
         roleModel.setWeapon(IWeapon.classMap.get(weapon));
         roleModel.setRoleDataModel(roleDataModel);
         roleModel.setCommand(ICommand.classMap.get(StandByImpl.class));
+        roleModel.setIBuffMap(new HashMap<>());
         return roleModel;
     }
 
+
+    /**
+     * 添加增益效果
+     *
+     * @param iBuff 增益状态
+     */
+    public void addBuff(IBuff iBuff) {
+        if (!this.getIBuffMap().containsKey(iBuff.getName())) {
+            this.getIBuffMap().put(iBuff.getName(), iBuff);
+        }else{
+            IBuff oldBuff = this.getIBuffMap().get(iBuff.getName());
+            oldBuff.overlayAdd();
+
+        }
+
+    }
+
+    /**
+     * 加载坐标和地图数据
+     *
+     * @param mapModel 地图对象
+     * @param x        坐标
+     * @param y        坐标
+     */
     public void load(MapModel mapModel, int x, int y) {
         this.mapModel = mapModel;
         this.x = x;
@@ -88,7 +115,12 @@ public class RoleModel {
         this.setGrid(mapModel.getGrids()[x][y]);
     }
 
-
+    /**
+     * 设置坐标数据
+     *
+     * @param x 坐标
+     * @param y 坐标
+     */
     public void setCoordinate(int x, int y) {
         this.x = x;
         this.y = y;
@@ -392,10 +424,6 @@ public class RoleModel {
         return enemyRoleList;
     }
 
-    public static void main(String[] args) {
-        List<RoleModel> roleModels = new RoleModel().calcDistanceEnemyRoleList(2);
-    }
-
 
     /**
      * 获取指定距离的队友角色列表
@@ -416,6 +444,17 @@ public class RoleModel {
                 enemyRoleList.add(roleModels[this.getX() + currentX][this.getY() + currentY]);
         }
         return enemyRoleList;
+    }
+
+    /**
+     * 改变当前角色对应的阵容士气
+     *
+     * @param unityChange 士气变化
+     */
+    public void calcChangeRoleUnity(int unityChange) {
+        this.getMapModel().getCampMemRole().values().stream().filter(unit -> unit.getCamp().equals(this.getCamp())).forEach(unit -> {
+            unit.setUnity(unit.getUnity() + unityChange);
+        });
     }
 
 

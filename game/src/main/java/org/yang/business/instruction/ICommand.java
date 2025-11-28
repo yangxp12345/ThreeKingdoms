@@ -89,7 +89,7 @@ public abstract class ICommand {
         long generalCommander = generalRoleList.stream().map(RoleModel::getCommander).mapToLong(x -> x).sum() * 100;
         long deputyCommander = deputyRoleList.stream().map(RoleModel::getCommander).mapToLong(x -> x).sum() * 100;
         long unityAddValue = (generalCommander + deputyCommander) / soldierRoleList.size();//每个士兵的胆魄加值
-        //累计统帅+胆魄
+        //累计平均分配统帅+胆魄
         if (DataCalc.isProbabilityTrigger(role.getUnity() + unityAddValue, 100)) return true;
         role.moveRandom();//不听指令 乱走
         return false;
