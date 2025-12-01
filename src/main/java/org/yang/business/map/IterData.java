@@ -11,8 +11,8 @@ public class IterData<T> {
     private LinkedList<T> dataList;
 
     public IterData(List<T> dataList) {
-        if (dataList == null || dataList.isEmpty()) {
-            return;
+        if (dataList == null) {
+            dataList = new LinkedList<>();
         }
         this.dataList = new LinkedList<>(dataList);
     }
@@ -32,7 +32,7 @@ public class IterData<T> {
     }
 
     public static void main(String[] args) {
-        IterData<String> iterData = new IterData<>(Arrays.asList("1","2", "3", "4", "5"));
+        IterData<String> iterData = new IterData<>(Arrays.asList("1", "2", "3", "4", "5"));
         while (iterData.hasNext()) {
             String next = iterData.next();
             if (next.equals("3")) {

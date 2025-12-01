@@ -8,13 +8,13 @@ import org.yang.business.active.IActive;
 import org.yang.business.role.RoleModel;
 
 /**
- * 撤退
+ * 逃命
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class RetreatImpl extends IActive {
-    final private static String name = "撤退";
+    final private static String name = "逃命";
 
     private int sourceX;//原X
     private int sourceY;//原Y

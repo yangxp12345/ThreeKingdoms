@@ -19,7 +19,7 @@ import java.util.Set;
 @Slf4j
 @Data
 public abstract class ICommand {
-    public static int sleep = 1;
+    public static int sleep = 60;
 
     final static private String name = "指令";
     final static public Map<Class<? extends ICommand>, ICommand> classMap = new HashMap<>();

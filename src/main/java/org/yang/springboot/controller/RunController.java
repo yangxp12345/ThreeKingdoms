@@ -14,7 +14,6 @@ import org.yang.business.grade.impl.DeputyImpl;
 import org.yang.business.grade.impl.GeneralImpl;
 import org.yang.business.grade.impl.SoldierImpl;
 import org.yang.business.instruction.ICommand;
-import org.yang.business.instruction.impl.NearbyImpl;
 import org.yang.business.instruction.impl.StandByImpl;
 import org.yang.business.map.MapModel;
 import org.yang.business.role.RoleDataModel;
@@ -35,6 +34,8 @@ public class RunController {
 
 
     private MapModel mapModel;
+    private boolean isInit = false;//是否初始化
+    private boolean isRun = false;//是否在运行
 
     @RequestMapping("/sleep")
     public Object sleep(@MyRequestParam RequestParamModel paramModel) {
@@ -50,7 +51,9 @@ public class RunController {
      * @return 测试结果
      */
     @RequestMapping("/init")
-    public Object init() {//自定义注解
+    public synchronized Object init() {//自定义注解
+        if (isInit) return mapModel.toString();//已经初始化了
+        isInit = true;
         mapModel = new MapModel(50, 15);
         mapModel.getCampLocation().addCampLocation(WhiteImpl.class, 0, 7);//添加大本营
         mapModel.getCampLocation().addCampLocation(BlackImpl.class, 49, 7);
@@ -77,12 +80,12 @@ public class RunController {
         mapModel.addRoleModel(RoleModel.create(29, BlackImpl.class, SoldierImpl.class, LongKnifeImpl.class, RoleDataModel.getRoleDataModel()), 40, 7);
         mapModel.addRoleModel(RoleModel.create(30, BlackImpl.class, SoldierImpl.class, LongSpearImpl.class, RoleDataModel.getRoleDataModel()), 40, 8);
         mapModel.addRoleModel(RoleModel.create(31, BlackImpl.class, SoldierImpl.class, PreviouslyImpl.class, RoleDataModel.getRoleDataModel()), 40, 9);
-        mapModel.updateCommand(BlackImpl.class, SoldierImpl.class, NearbyImpl.class);
-        mapModel.updateCommand(BlackImpl.class, DeputyImpl.class, NearbyImpl.class);
-        mapModel.updateCommand(BlackImpl.class, GeneralImpl.class, NearbyImpl.class);
-        mapModel.updateCommand(WhiteImpl.class, SoldierImpl.class, NearbyImpl.class);
-        mapModel.updateCommand(WhiteImpl.class, DeputyImpl.class, NearbyImpl.class);
-        mapModel.updateCommand(WhiteImpl.class, GeneralImpl.class, NearbyImpl.class);
+        mapModel.updateCommand(BlackImpl.class, SoldierImpl.class, StandByImpl.class);
+        mapModel.updateCommand(BlackImpl.class, DeputyImpl.class, StandByImpl.class);
+        mapModel.updateCommand(BlackImpl.class, GeneralImpl.class, StandByImpl.class);
+        mapModel.updateCommand(WhiteImpl.class, SoldierImpl.class, StandByImpl.class);
+        mapModel.updateCommand(WhiteImpl.class, DeputyImpl.class, StandByImpl.class);
+        mapModel.updateCommand(WhiteImpl.class, GeneralImpl.class, StandByImpl.class);
         return mapModel.toString();
     }
 
@@ -110,8 +113,6 @@ public class RunController {
      */
     @RequestMapping("/instruction")
     public Object instruction(@MyRequestParam RequestParamModel paramModel) throws Exception {//自定义注解
-
-
         Map<String, String> body = paramModel.getBody();
         String instructionName = body.get("instructionName");
         String roleIdStr = body.get("roleId");
@@ -126,7 +127,15 @@ public class RunController {
      * 开始战斗
      */
     @RequestMapping("/start")
-    public Object start() throws Exception {//自定义注解
+    public synchronized Object start() throws Exception {//自定义注解
+        System.out.println(isRun);
+        if (isRun) {
+            return DataCalc.toJson("code", 200);//已经在运行//
+        }
+        isRun = true;
+        if (!isInit) {
+            init();
+        }
         run();
         return DataCalc.toJson("code", 200);
     }
@@ -143,6 +152,7 @@ public class RunController {
 
 
     private void run() {
+        if (mapModel == null) return;
         new Thread(() -> {
             try {
                 while (true) {
@@ -150,6 +160,9 @@ public class RunController {
                     if (run) break;
                 }
                 System.out.println("战斗结束 战斗结束 共" + mapModel.getRound() + "回合");
+                isInit = false;
+                isRun = false;
+                mapModel = null;
             } catch (Exception e) {
                 log.error("执行异常", e);
                 throw new RuntimeException(e);

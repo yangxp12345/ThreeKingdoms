@@ -16,7 +16,7 @@ import java.util.List;
 @Data
 public class PreviouslyImpl extends IWeapon {
     final private String name = "狙击枪";
-    final private String msg = "可以对四周的某个方位进行一次中等距离常规输出";
+    final private String msg = "可以对四周的某个方位进行一次超远距离常规输出";
     final private int active = 4;//攻击行动消耗
     final private int atkMaxDistance = 20;//攻击最大距离
     final private int atkMinDistance = 8;//攻击最小距离
